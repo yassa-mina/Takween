@@ -136,7 +136,7 @@ D.forEach(function(d,i){
 function prog(){
     var k=Object.keys(S.done).filter(function(x){return S.done[x]}).length;
     document.getElementById("fill").style.width=(k/30*100)+"%";
-    document.getElementById("stat").textContent="خلصتي "+ar(k)+" من ٣٠ يوم"+(k==30?" 🎉":"");
+    document.getElementById("stat").textContent="خلصت/ي "+ar(k)+" من ٣٠ يوم"+(k==30?" 🎉":"");
 }
 prog();
 
