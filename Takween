@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#26337a">
+<title>خطة قراءة سفر التكوين في شهر</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Naskh+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- رابط Manifest ديناميكي للـ PWA -->
+<link rel="manifest" id="manifest-link">
+
+<style>
+:root{--bg:#f6ecd6;--card:#fffaf0;--ink:#1d1a2e;--muted:#6b6275;--navy:#26337a;--red:#9b2335;--gold:#b8923a;--line:#d9c79b;--ok:#2f7d4f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14172b;--card:#1d2140;--ink:#f3ead3;--muted:#a9a3bb;--navy:#8d9bff;--red:#e0788a;--gold:#d9b560;--line:#3a3f6b;--ok:#6fcf97}}
+:root[data-theme="dark"]{--bg:#14172b;--card:#1d2140;--ink:#f3ead3;--muted:#a9a3bb;--navy:#8d9bff;--red:#e0788a;--gold:#d9b560;--line:#3a3f6b;--ok:#6fcf97}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Noto Naskh Arabic','Amiri',Tahoma,serif;line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+header{text-align:center;border:2px solid var(--gold);border-radius:18px;padding:14px 12px;background:var(--card)}
+h1{margin:0;font-family:'Amiri','Noto Naskh Arabic',serif;font-size:1.9rem;color:var(--navy)}
+.bar{height:12px;background:var(--line);border-radius:8px;overflow:hidden;margin:12px 0 4px}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--red),var(--gold));transition:width .3s ease-in-out}
+.stat{color:var(--muted);font-size:.95rem}
+.tools{display:flex;gap:8px;justify-content:center;margin-top:8px;flex-wrap:wrap}
+button{font:inherit;cursor:pointer;transition:all 0.2s}
+.tools button{background:none;border:1px solid var(--line);color:var(--muted);border-radius:20px;padding:4px 14px}
+.tools button:hover{background:var(--line);color:var(--ink)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-top:16px}
+.card{background:var(--card);border:2px solid var(--navy);border-radius:30px 30px 14px 14px;padding:14px 12px 12px;text-align:center;position:relative;transition:all 0.3s}
+.card.done{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 10%,var(--card))}
+.day{font-weight:700;font-size:1.2rem;color:var(--red)}
+.ch{font-weight:600}
+.t{font-size:1.05rem;margin-bottom:8px}
+.row{display:flex;gap:8px;justify-content:center;align-items:center}
+.chk{width:42px;height:42px;border-radius:50%;border:2px solid var(--navy);background:none;color:#fff;font-size:1.3rem;display:flex;align-items:center;justify-content:center}
+.done .chk{background:var(--ok);border-color:var(--ok)}
+.nb{background:none;border:1px solid var(--line);border-radius:20px;color:var(--navy);padding:4px 12px}
+.nb.has::after{content:" •";color:var(--red)}
+
+/* تأثير الحركة لحقل الملاحظات */
+.notes-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease-out;
+  margin-top: 8px;
+}
+.card.open .notes-wrap {
+  grid-template-rows: 1fr;
+}
+.notes-inner {
+  overflow: hidden;
+}
+textarea{width:100%;min-height:90px;resize:vertical;font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>خطة قراءة سفر التكوين في شهر</h1>
+<div class="bar"><i id="fill"></i></div>
+<div class="stat" id="stat"></div>
+<div class="tools">
+    <button id="reset">مسح كل التقدم</button>
+    <button id="export">تحميل الملاحظات</button>
+</div>
+</header>
+<main class="grid" id="grid"></main>
+</div>
+
+<script>
+// --- 1. إعدادات PWA الديناميكية (تعمل من ملف واحد) ---
+(function initPWA() {
+  const manifest = {
+    "name": "خطة قراءة التكوين",
+    "short_name": "التكوين",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#f6ecd6",
+    "theme_color": "#26337a",
+    "icons": [{
+      // أيقونة بسيطة مدمجة باستخدام Base64 SVG
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzI2MzM3YSIgcng9IjIwIi8+PHRleHQgeT0iNzAiIHg9IjE1IiBmaWxsPSIjZmZmIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNjAiPtinPC90ZXh0Pjwvc3ZnPg==",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }]
+  };
+  const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+  document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
+
+  const swCode = `
+    self.addEventListener('install', (e) => e.waitUntil(self.skipWaiting()));
+    self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+    self.addEventListener('fetch', (e) => {});
+  `;
+  const swBlob = new Blob([swCode], {type: 'application/javascript'});
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+  }
+})();
+
+// --- 2. بيانات التطبيق والمنطق الأساسي ---
+var D=[["1-2","قصة الخلق"],["3-4","سقوط الإنسان"],["5-6","نسل آدم"],["7-8","الطوفان"],["9-10","عهد نوح"],["11-12","دعوة إبراهيم"],["13-14","إبراهيم ولوط"],["15-16","عهد الله"],["17-18","عهد الختان"],["19-20","سدوم وعمورة"],["21-22","ولادة إسحاق"],["23-24","زواج إسحاق"],["25-26","عيسو ويعقوب"],["27-28","بركة يعقوب"],["29-30","زواج يعقوب"],["31-32","صراع يعقوب"],["33-34","يعقوب وعيسو"],["35-36","بيت إيل"],["37-38","أحلام يوسف"],["39-40","يوسف في مصر"],["41","أحلام فرعون"],["42","إخوة يوسف"],["43","رحلة ثانية"],["44","الكأس الفضية"],["45","إعلان يوسف"],["46","نزول مصر"],["47","أرض جاسان"],["48","بركة يعقوب"],["49","بركة الأسباط"],["50","وفاة يعقوب"]];
+var K="genesis30:v1",S={done:{},notes:{}};
+try{var r=localStorage.getItem(K);if(r)S=JSON.parse(r)}catch(e){}
+S.done=S.done||{};S.notes=S.notes||{};
+
+function save(){try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}}
+function ar(s){return String(s).replace(/\d/g,function(d){return "٠١٢٣٤٥٦٧٨٩"[d]})}
+
+var g=document.getElementById("grid");
+D.forEach(function(d,i){
+ var n=i+1,c=document.createElement("div");c.className="card";
+ c.innerHTML='<div class="day">اليوم '+ar(n)+'</div><div class="ch">إصحاح '+ar(d[0].replace("-"," - "))+'</div><div class="t">'+d[1]+'</div><div class="row"><button class="nb">ملاحظاتي</button><button class="chk" aria-label="تم">✓</button></div><div class="notes-wrap"><div class="notes-inner"><textarea placeholder="اكتبي ملاحظاتك هنا…"></textarea></div></div>';
+ 
+ var ta=c.querySelector("textarea"),nb=c.querySelector(".nb"),chk=c.querySelector(".chk");
+ ta.value=S.notes[n]||"";
+ 
+ function ui(){
+     c.classList.toggle("done",!!S.done[n]);
+     nb.classList.toggle("has",!!(S.notes[n]||"").trim());
+     chk.setAttribute("aria-pressed",!!S.done[n]);
+ }
+ 
+ chk.onclick=function(){S.done[n]=!S.done[n];save();ui();prog()};
+ nb.onclick=function(){
+     c.classList.toggle("open");
+     if(c.classList.contains("open")) ta.focus();
+ };
+ ta.oninput=function(){S.notes[n]=ta.value;save();ui()};
+ ui();g.appendChild(c);
+});
+
+function prog(){
+    var k=Object.keys(S.done).filter(function(x){return S.done[x]}).length;
+    document.getElementById("fill").style.width=(k/30*100)+"%";
+    document.getElementById("stat").textContent="خلصتي "+ar(k)+" من ٣٠ يوم"+(k==30?" 🎉":"");
+}
+prog();
+
+// --- 3. مسح التقدم ---
+var rb=document.getElementById("reset"),armed=false;
+rb.onclick=function(){
+ if(!armed){
+     armed=true;
+     rb.textContent="تأكيد مسح البيانات والملاحظات؟";
+     rb.style.color="var(--red)";
+     setTimeout(function(){
+         armed=false;
+         rb.textContent="مسح كل التقدم";
+         rb.style.color="";
+     },4000);
+     return;
+ }
+ S={done:{},notes:{}};save();location.reload();
+};
+
+// --- 4. تصدير الملاحظات ---
+document.getElementById("export").onclick=function(){
+    var txt = "ملاحظاتي - خطة قراءة سفر التكوين\n";
+    txt += "=================================\n\n";
+    var hasNotes = false;
+    for(var i=1; i<=30; i++) {
+        if(S.notes[i] && S.notes[i].trim()) {
+            hasNotes = true;
+            txt += "● اليوم " + ar(i) + " | إصحاح " + ar(D[i-1][0]) + " (" + D[i-1][1] + "):\n";
+            txt += S.notes[i] + "\n\n";
+        }
+    }
+    if(!hasNotes) {
+        alert("لا توجد ملاحظات لتحميلها حتى الآن.");
+        return;
+    }
+    var blob = new Blob([txt], {type: "text/plain;charset=utf-8"});
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ملاحظات_سفر_التكوين.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+};
+</script>
+</body>
+</html>
